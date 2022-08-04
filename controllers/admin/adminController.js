@@ -88,5 +88,3 @@ exports.addDoctors = async (req, res) => {
             });
         })
 }
-
-/////////
