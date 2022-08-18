@@ -1,6 +1,8 @@
 let db = require("../../config/db");
 let OTP = require("../../utils/randomNumber");
 let User = require("../../models/user");
+let Appointment = require("../../models/bookAppointment");
+let BookingTypeSchema = require("../../models/bookingType");
 let Otp_verification = require("../../models/otp_verification");
 
 // exports.createUser = async (req, res) => {
@@ -86,7 +88,7 @@ exports.createUser = async (req, res) => {
         LastName: req.body.LastName,
         MobileNumber: req.body.MobileNumber,
         Password: req.body.Password,
-        Role : "user"
+        Role: "user"
     })
 
     newUserOBj.save()
@@ -402,5 +404,93 @@ exports.login = async (req, res) => {
         res.status(400).send({
             message: "User not found"
         });
+    }
+}
+
+exports.bookAppointment = async (req, res) => {
+    let { UserID, HospitalID, DoctorID, BookingDate } = req.body;
+    if (!UserID) {
+        res.status(400).send({
+            message: "User ID is missing!"
+        });
+    }
+    if (!HospitalID) {
+        res.status(400).send({
+            message: "Hospital ID is missing!"
+        });
+    }
+    if (!DoctorID) {
+        res.status(400).send({
+            message: "Doctor ID is missing!"
+        });
+    }
+    if (!BookingDate) {
+        res.status(400).send({
+            message: "Booking Date can not be empty!"
+        });
+    }
+    let appointments = await Appointment.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate }).sort({ 'createdAt': -1 });
+    console.log("appointments :", appointments);
+    if (appointments) {
+        let newObj = new Appointment({
+            User: UserID,
+            Hospital: HospitalID,
+            Doctor: DoctorID,
+            BookingDate: BookingDate,
+            TokenNumber: appointments.TokenNumber + 2,
+            BookingType: appointments.BookingType
+        })
+        newObj.save()
+            .then(data => {
+                res.status(200).send({
+                    message: "Appointment booking done successfully",
+                    data: data
+                });
+            })
+            .catch(err => {
+                res.status(400).send({
+                    message: "Error while booking the appointment!",
+                    data: err
+                });
+            })
+    }
+    else {
+        let bookingTypeData = await BookingTypeSchema.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate });
+        var setBookingType;
+        if (bookingTypeData) {
+            setBookingType = await bookingTypeData.BookingType
+        }
+        else {
+            setBookingType = await "odd";
+            const newBookTypeObj = new BookingTypeSchema({
+                BookingType: "odd",
+                BookingDate: BookingDate,
+                Hospital: HospitalID,
+                Doctor: DoctorID
+            });
+            await newBookTypeObj.save();
+        }
+        console.log("setBookingType :",setBookingType);
+        let newObj = new Appointment({
+            User: UserID,
+            Hospital: HospitalID,
+            Doctor: DoctorID,
+            BookingDate: BookingDate,
+            TokenNumber: setBookingType ? (setBookingType === "odd" ? 1 : 2) : 1,
+            BookingType: setBookingType
+        })
+        await newObj.save()
+            .then(data => {
+                res.status(200).send({
+                    message: "Appointment booking done successfully",
+                    data: data
+                });
+            })
+            .catch(err => {
+                res.status(400).send({
+                    message: "Error while booking the appointment!",
+                    data: err
+                });
+            })
     }
 }

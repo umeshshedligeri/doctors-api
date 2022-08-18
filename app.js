@@ -9,6 +9,7 @@ const Config = require("./config/application");
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var adminRouter = require('./routes/admin');
+var receptionRouter = require('./routes/reception');
 
 var app = express();
 
@@ -36,6 +37,7 @@ mongoose
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/reception', receptionRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
