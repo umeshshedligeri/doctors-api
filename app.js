@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const mongoose = require("mongoose");
 const Config = require("./config/application");
+const cors = require('cors');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -33,6 +34,10 @@ mongoose
 })
 .then(() => console.log('Connected Successfully'))
 .catch((err) => console.error('Not Connected'));
+
+app.use(cors({
+  origin: '*'
+}));
 
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
