@@ -4,6 +4,10 @@ let User = require("../../models/user");
 let Appointment = require("../../models/bookAppointment");
 let BookingTypeSchema = require("../../models/bookingType");
 let Otp_verification = require("../../models/otp_verification");
+let HospitalSchema = require("../../models/hospital");
+let Doctor = require("../../models/doctors");
+
+var ObjectId = require('mongoose').Types.ObjectId; 
 
 // exports.createUser = async (req, res) => {
 //     // Validate request
@@ -470,7 +474,7 @@ exports.bookAppointment = async (req, res) => {
             });
             await newBookTypeObj.save();
         }
-        console.log("setBookingType :",setBookingType);
+        console.log("setBookingType :", setBookingType);
         let newObj = new Appointment({
             User: UserID,
             Hospital: HospitalID,
@@ -492,5 +496,38 @@ exports.bookAppointment = async (req, res) => {
                     data: err
                 });
             })
+    }
+}
+
+exports.getHospitals = async (req, res) => {
+    let hospitals = await HospitalSchema.find();
+    if (hospitals) {
+        res.status(200).send({
+            message: "Hospitals found successfully",
+            data: hospitals
+        });
+    }
+    else {
+        res.status(400).send({
+            message: "No data found",
+            data: hospitals
+        });
+    }
+}
+
+exports.getDoctorsByHospital = async (req, res) => {
+    let hospitalId = req.query.hospitalId;
+    let doctors = await Doctor.find({ Hospital: ObjectId(hospitalId) }).populate('Hospital');
+    if (doctors) {
+        res.status(200).send({
+            message: "Doctors found successfully",
+            data: doctors
+        });
+    }
+    else {
+        res.status(400).send({
+            message: "No data found",
+            data: doctors
+        });
     }
 }
