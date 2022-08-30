@@ -7,7 +7,7 @@ exports.updateBookingType = async (req, res) => {
     if (bookingTypeData) {
         res.status(400).send({
             message: "Booking type already there for selected date and doctor",
-            data: err
+            data: bookingTypeData
         });
     }
     else {
