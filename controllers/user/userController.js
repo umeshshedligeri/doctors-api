@@ -6,8 +6,12 @@ let BookingTypeSchema = require("../../models/bookingType");
 let Otp_verification = require("../../models/otp_verification");
 let HospitalSchema = require("../../models/hospital");
 let Doctor = require("../../models/doctors");
+let bcrypt = require("bcryptjs");
 
-var ObjectId = require('mongoose').Types.ObjectId; 
+let generateJwt = require("../../utils/jwt");
+
+
+var ObjectId = require('mongoose').Types.ObjectId;
 
 // exports.createUser = async (req, res) => {
 //     // Validate request
@@ -86,12 +90,12 @@ exports.createUser = async (req, res) => {
             message: "Password can not be empty!"
         });
     }
-
+    let salt = bcrypt.genSaltSync(10);
     const newUserOBj = new User({
         FirstName: req.body.FirstName,
         LastName: req.body.LastName,
         MobileNumber: req.body.MobileNumber,
-        Password: req.body.Password,
+        Password: bcrypt.hashSync(req.body.Password, salt),
         Role: "user"
     })
 
@@ -392,10 +396,19 @@ exports.login = async (req, res) => {
     }
     let user = await User.findOne({ MobileNumber: req.body.MobileNumber })
     if (user) {
-        if (user.Password === req.body.Password) {
+        if (bcrypt.compareSync(req.body.Password, user.Password)) {
+            let customToken = {
+                _id: user._id,
+                FirstName: user.FirstName,
+                LastName: user.LastName,
+                MobileNumber: user.MobileNumber,
+                Role: user.Role
+            }
+            let accessToken = await generateJwt(customToken);
+            customToken["token"] = await accessToken;
             res.status(200).send({
                 message: "Logged-In successfully",
-                data: user
+                data: customToken
             });
         }
         else {
