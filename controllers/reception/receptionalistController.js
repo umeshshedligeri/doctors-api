@@ -5,7 +5,9 @@ exports.updateBookingType = async (req, res) => {
     let { BookingType, BookingDate, HospitalID, DoctorID } = req.body;
     let bookingTypeData = await BookingTypeSchema.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate });
     if (bookingTypeData) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Booking type already there for selected date and doctor",
             data: bookingTypeData
         });
@@ -19,13 +21,17 @@ exports.updateBookingType = async (req, res) => {
         });
         newObj.save()
             .then(data => {
-                res.status(200).send({
+                res.send({
+                    status: 200,
+                    success: true,
                     message: "Booking type added successfully",
                     data: data
                 });
             })
             .catch(err => {
-                res.status(400).send({
+                res.send({
+                    status: 400,
+                    success: false,
                     message: "Error while adding booking type",
                     data: err
                 });

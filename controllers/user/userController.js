@@ -66,27 +66,37 @@ var ObjectId = require('mongoose').Types.ObjectId;
 exports.createUser = async (req, res) => {
     // Validate request
     if (!req.body) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Content can not be empty!"
         });
     }
     if (!req.body.FirstName) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "First name can not be empty!"
         });
     }
     if (!req.body.LastName) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Last name can not be empty!"
         });
     }
     if (!req.body.MobileNumber) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Mobile number can not be empty!"
         });
     }
     if (!req.body.Password) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Password can not be empty!"
         });
     }
@@ -101,13 +111,17 @@ exports.createUser = async (req, res) => {
 
     newUserOBj.save()
         .then(data => {
-            res.status(200).send({
+            res.send({
+                status: 200,
+                success: true,
                 message: "User registered successfully",
                 data: data
             });
         })
         .catch(err => {
-            res.status(400).send({
+            res.send({
+                status: 400,
+                success: false,
                 message: "Error while creating the user!",
                 data: err
             });
@@ -133,13 +147,17 @@ exports.createUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
     User.find()
         .then(data => {
-            res.status(200).send({
+            res.send({
+                status: 200,
+                success: true,
                 message: "Users found successfully",
                 data: data
             });
         })
         .catch(err => {
-            res.status(400).send({
+            res.send({
+                status: 400,
+                success: false,
                 message: "Error while fetching the users!",
                 data: err
             });
@@ -214,14 +232,18 @@ exports.getUsers = async (req, res) => {
 exports.generateOTP = async (req, res) => {
     // Validate request
     if (!req.body) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Content can not be empty!"
         });
         return
     }
     let { MobileNumber } = req.body
     if (!MobileNumber) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Mobile number can not be empty!"
         });
         return
@@ -236,13 +258,17 @@ exports.generateOTP = async (req, res) => {
     if (user) {
         let otpUpdate = await Otp_verification.findByIdAndUpdate(user.id, { OTP: otp });
         if (otpUpdate) {
-            res.status(200).send({
+            res.send({
+                status: 200,
+                success: true,
                 message: "OTP updated successfully",
                 data: otpUpdate
             });
         }
         else {
-            res.status(400).send({
+            res.send({
+                status: 400,
+                success: false,
                 message: "Error while updating the otp!",
                 data: otpUpdate
             });
@@ -251,13 +277,17 @@ exports.generateOTP = async (req, res) => {
     else {
         otpObj.save()
             .then(data => {
-                res.status(200).send({
+                res.send({
+                    status: 200,
+                    success: true,
                     message: "OTP sent successfully",
                     data: data
                 });
             })
             .catch(err => {
-                res.status(400).send({
+                res.send({
+                    status: 400,
+                    success: false,
                     message: "Error while storing the otp!",
                     data: err
                 });
@@ -332,20 +362,26 @@ exports.generateOTP = async (req, res) => {
 exports.verifyOTP = async (req, res) => {
     // Validate request
     if (!req.body) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Content can not be empty!"
         });
         return
     }
     let { MobileNumber, OTP } = req.body
     if (!MobileNumber) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Mobile number can not be empty!"
         });
         return
     }
     if (!OTP) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "OTP can not be empty!"
         });
         return
@@ -356,27 +392,35 @@ exports.verifyOTP = async (req, res) => {
         if (user.OTP == OTP) {
             let deleteOtp = await Otp_verification.findByIdAndDelete(user.id)
             if (deleteOtp) {
-                res.status(200).send({
+                res.send({
+                    status: 200,
+                    success: true,
                     message: "OTP verfied successfully",
                     data: user
                 });
             }
             else {
-                res.status(400).send({
+                res.send({
+                    status: 400,
+                    success: false,
                     message: "Error while validating the OTP",
                     data: {}
                 });
             }
         }
         else {
-            res.status(400).send({
+            res.send({
+                status: 400,
+                success: false,
                 message: "Incorrect OTP. Please try again..",
                 data: {}
             });
         }
     }
     else {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "No data found",
             data: user
         });
@@ -427,8 +471,8 @@ exports.login = async (req, res) => {
     }
     else {
         res.send({
-            status :400,
-            success : false,
+            status: 400,
+            success: false,
             message: "User not found"
         });
     }
@@ -437,22 +481,30 @@ exports.login = async (req, res) => {
 exports.bookAppointment = async (req, res) => {
     let { UserID, HospitalID, DoctorID, BookingDate } = req.body;
     if (!UserID) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "User ID is missing!"
         });
     }
     if (!HospitalID) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Hospital ID is missing!"
         });
     }
     if (!DoctorID) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Doctor ID is missing!"
         });
     }
     if (!BookingDate) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Booking Date can not be empty!"
         });
     }
@@ -469,13 +521,17 @@ exports.bookAppointment = async (req, res) => {
         })
         newObj.save()
             .then(data => {
-                res.status(200).send({
+                res.send({
+                    status: 200,
+                    success: true,
                     message: "Appointment booking done successfully",
                     data: data
                 });
             })
             .catch(err => {
-                res.status(400).send({
+                res.send({
+                    status: 400,
+                    success: false,
                     message: "Error while booking the appointment!",
                     data: err
                 });
@@ -508,13 +564,17 @@ exports.bookAppointment = async (req, res) => {
         })
         await newObj.save()
             .then(data => {
-                res.status(200).send({
+                res.send({
+                    status: 200,
+                    success: true,
                     message: "Appointment booking done successfully",
                     data: data
                 });
             })
             .catch(err => {
-                res.status(400).send({
+                res.send({
+                    status: 400,
+                    success: false,
                     message: "Error while booking the appointment!",
                     data: err
                 });
@@ -525,13 +585,17 @@ exports.bookAppointment = async (req, res) => {
 exports.getHospitals = async (req, res) => {
     let hospitals = await HospitalSchema.find();
     if (hospitals) {
-        res.status(200).send({
+        res.send({
+            status: 200,
+            success: true,
             message: "Hospitals found successfully",
             data: hospitals
         });
     }
     else {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "No data found",
             data: hospitals
         });
@@ -542,13 +606,17 @@ exports.getDoctorsByHospital = async (req, res) => {
     let hospitalId = req.query.hospitalId;
     let doctors = await Doctor.find({ Hospital: ObjectId(hospitalId) }).populate('Hospital');
     if (doctors) {
-        res.status(200).send({
+        res.send({
+            status: 200,
+            success: true,
             message: "Doctors found successfully",
             data: doctors
         });
     }
     else {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "No data found",
             data: doctors
         });
