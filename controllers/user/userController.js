@@ -385,12 +385,16 @@ exports.verifyOTP = async (req, res) => {
 
 exports.login = async (req, res) => {
     if (!req.body.MobileNumber) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Mobile number can not be empty!"
         });
     }
     if (!req.body.Password) {
-        res.status(400).send({
+        res.send({
+            status: 400,
+            success: false,
             message: "Password can not be empty!"
         });
     }
@@ -406,19 +410,25 @@ exports.login = async (req, res) => {
             }
             let accessToken = await generateJwt(customToken);
             customToken["token"] = await accessToken;
-            res.status(200).send({
+            res.send({
+                status: 200,
+                success: true,
                 message: "Logged-In successfully",
                 data: customToken
             });
         }
         else {
-            res.status(400).send({
+            res.send({
+                status: 400,
+                success: false,
                 message: "Incorrect password"
             });
         }
     }
     else {
-        res.status(400).send({
+        res.send({
+            status :400,
+            success : false,
             message: "User not found"
         });
     }
