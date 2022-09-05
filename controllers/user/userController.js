@@ -66,66 +66,77 @@ var ObjectId = require('mongoose').Types.ObjectId;
 exports.createUser = async (req, res) => {
     // Validate request
     if (!req.body) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "Content can not be empty!"
         });
     }
     if (!req.body.FirstName) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "First name can not be empty!"
         });
     }
     if (!req.body.LastName) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "Last name can not be empty!"
         });
     }
     if (!req.body.MobileNumber) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "Mobile number can not be empty!"
         });
     }
     if (!req.body.Password) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "Password can not be empty!"
         });
     }
-    let salt = bcrypt.genSaltSync(10);
-    const newUserOBj = new User({
-        FirstName: req.body.FirstName,
-        LastName: req.body.LastName,
-        MobileNumber: req.body.MobileNumber,
-        Password: bcrypt.hashSync(req.body.Password, salt),
-        Role: "user"
-    })
 
-    newUserOBj.save()
-        .then(data => {
-            res.send({
-                status: 200,
-                success: true,
-                message: "User registered successfully",
-                data: data
-            });
+    try {
+        let salt = bcrypt.genSaltSync(10);
+        const newUserOBj = new User({
+            FirstName: req.body.FirstName,
+            LastName: req.body.LastName,
+            MobileNumber: req.body.MobileNumber,
+            Password: bcrypt.hashSync(req.body.Password, salt),
+            Role: "user"
         })
-        .catch(err => {
-            res.send({
-                status: 400,
-                success: false,
-                message: "Error while creating the user!",
-                data: err
-            });
-        })
+
+        newUserOBj.save()
+            .then(data => {
+                res.send({
+                    status: 200,
+                    success: true,
+                    message: "User registered successfully",
+                    data: data
+                });
+            })
+            .catch(err => {
+                res.send({
+                    status: 400,
+                    success: false,
+                    message: "Error while creating the user!",
+                    data: err
+                });
+            })
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
 }
 
 // exports.getUsers = async (req, res) => {
@@ -249,49 +260,59 @@ exports.generateOTP = async (req, res) => {
         return
     }
 
-    let otp = OTP.randomNumberGenerator();
-    let user = await Otp_verification.findOne({ MobileNumber: MobileNumber });
-    let otpObj = new Otp_verification({
-        MobileNumber: MobileNumber,
-        OTP: otp
-    })
-    if (user) {
-        let otpUpdate = await Otp_verification.findByIdAndUpdate(user.id, { OTP: otp });
-        if (otpUpdate) {
-            res.send({
-                status: 200,
-                success: true,
-                message: "OTP updated successfully",
-                data: otpUpdate
-            });
-        }
-        else {
-            res.send({
-                status: 400,
-                success: false,
-                message: "Error while updating the otp!",
-                data: otpUpdate
-            });
-        }
-    }
-    else {
-        otpObj.save()
-            .then(data => {
+    try {
+        let otp = OTP.randomNumberGenerator();
+        let user = await Otp_verification.findOne({ MobileNumber: MobileNumber });
+        let otpObj = new Otp_verification({
+            MobileNumber: MobileNumber,
+            OTP: otp
+        })
+        if (user) {
+            let otpUpdate = await Otp_verification.findByIdAndUpdate(user.id, { OTP: otp });
+            if (otpUpdate) {
                 res.send({
                     status: 200,
                     success: true,
-                    message: "OTP sent successfully",
-                    data: data
+                    message: "OTP updated successfully",
+                    data: otpUpdate
                 });
-            })
-            .catch(err => {
+            }
+            else {
                 res.send({
                     status: 400,
                     success: false,
-                    message: "Error while storing the otp!",
-                    data: err
+                    message: "Error while updating the otp!",
+                    data: otpUpdate
                 });
-            })
+            }
+        }
+        else {
+            otpObj.save()
+                .then(data => {
+                    res.send({
+                        status: 200,
+                        success: true,
+                        message: "OTP sent successfully",
+                        data: data
+                    });
+                })
+                .catch(err => {
+                    res.send({
+                        status: 400,
+                        success: false,
+                        message: "Error while storing the otp!",
+                        data: err
+                    });
+                })
+        }
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
     }
 }
 
@@ -387,23 +408,33 @@ exports.verifyOTP = async (req, res) => {
         return
     }
 
-    let user = await Otp_verification.findOne({ MobileNumber: MobileNumber });
-    if (user) {
-        if (user.OTP == OTP) {
-            let deleteOtp = await Otp_verification.findByIdAndDelete(user.id)
-            if (deleteOtp) {
-                res.send({
-                    status: 200,
-                    success: true,
-                    message: "OTP verfied successfully",
-                    data: user
-                });
+    try {
+        let user = await Otp_verification.findOne({ MobileNumber: MobileNumber });
+        if (user) {
+            if (user.OTP == OTP) {
+                let deleteOtp = await Otp_verification.findByIdAndDelete(user.id)
+                if (deleteOtp) {
+                    res.send({
+                        status: 200,
+                        success: true,
+                        message: "OTP verfied successfully",
+                        data: user
+                    });
+                }
+                else {
+                    res.send({
+                        status: 400,
+                        success: false,
+                        message: "Error while validating the OTP",
+                        data: {}
+                    });
+                }
             }
             else {
                 res.send({
                     status: 400,
                     success: false,
-                    message: "Error while validating the OTP",
+                    message: "Incorrect OTP. Please try again..",
                     data: {}
                 });
             }
@@ -412,68 +443,78 @@ exports.verifyOTP = async (req, res) => {
             res.send({
                 status: 400,
                 success: false,
-                message: "Incorrect OTP. Please try again..",
-                data: {}
+                message: "No data found",
+                data: user
             });
         }
     }
-    else {
-        res.send({
+    catch (err) {
+        return res.send({
             status: 400,
             success: false,
-            message: "No data found",
-            data: user
+            message: "Something went wrong",
+            data: err
         });
     }
 }
 
 exports.login = async (req, res) => {
     if (!req.body.MobileNumber) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "Mobile number can not be empty!"
         });
     }
     if (!req.body.Password) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "Password can not be empty!"
         });
     }
-    let user = await User.findOne({ MobileNumber: req.body.MobileNumber })
-    if (user) {
-        if (bcrypt.compareSync(req.body.Password, user.Password)) {
-            let customToken = {
-                _id: user._id,
-                FirstName: user.FirstName,
-                LastName: user.LastName,
-                MobileNumber: user.MobileNumber,
-                Role: user.Role
+    try {
+        let user = await User.findOne({ MobileNumber: req.body.MobileNumber })
+        if (user) {
+            if (bcrypt.compareSync(req.body.Password, user.Password)) {
+                let customToken = {
+                    _id: user._id,
+                    FirstName: user.FirstName,
+                    LastName: user.LastName,
+                    MobileNumber: user.MobileNumber,
+                    Role: user.Role
+                }
+                let accessToken = await generateJwt(customToken);
+                customToken["token"] = await accessToken;
+                res.send({
+                    status: 200,
+                    success: true,
+                    message: "Logged-In successfully",
+                    data: customToken
+                });
             }
-            let accessToken = await generateJwt(customToken);
-            customToken["token"] = await accessToken;
-            res.send({
-                status: 200,
-                success: true,
-                message: "Logged-In successfully",
-                data: customToken
-            });
+            else {
+                res.send({
+                    status: 400,
+                    success: false,
+                    message: "Incorrect password"
+                });
+            }
         }
         else {
             res.send({
                 status: 400,
                 success: false,
-                message: "Incorrect password"
+                message: "User not found"
             });
         }
     }
-    else {
-        res.send({
+    catch (err) {
+        return res.send({
             status: 400,
             success: false,
-            message: "User not found"
+            message: "Something went wrong",
+            data: err
         });
     }
 }
@@ -481,144 +522,183 @@ exports.login = async (req, res) => {
 exports.bookAppointment = async (req, res) => {
     let { UserID, HospitalID, DoctorID, BookingDate } = req.body;
     if (!UserID) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "User ID is missing!"
         });
     }
     if (!HospitalID) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "Hospital ID is missing!"
         });
     }
     if (!DoctorID) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "Doctor ID is missing!"
         });
     }
     if (!BookingDate) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "Booking Date can not be empty!"
         });
     }
-    let appointments = await Appointment.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate }).sort({ 'createdAt': -1 });
-    console.log("appointments :", appointments);
-    if (appointments) {
-        let newObj = new Appointment({
-            User: UserID,
-            Hospital: HospitalID,
-            Doctor: DoctorID,
-            BookingDate: BookingDate,
-            TokenNumber: appointments.TokenNumber + 2,
-            BookingType: appointments.BookingType
-        })
-        newObj.save()
-            .then(data => {
-                res.send({
-                    status: 200,
-                    success: true,
-                    message: "Appointment booking done successfully",
-                    data: data
-                });
+
+    try {
+        let appointments = await Appointment.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate }).sort({ 'createdAt': -1 });
+        console.log("appointments :", appointments);
+        if (appointments) {
+            let newObj = new Appointment({
+                User: UserID,
+                Hospital: HospitalID,
+                Doctor: DoctorID,
+                BookingDate: BookingDate,
+                TokenNumber: appointments.TokenNumber + 2,
+                BookingType: appointments.BookingType
             })
-            .catch(err => {
-                res.send({
-                    status: 400,
-                    success: false,
-                    message: "Error while booking the appointment!",
-                    data: err
-                });
-            })
-    }
-    else {
-        let bookingTypeData = await BookingTypeSchema.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate });
-        var setBookingType;
-        if (bookingTypeData) {
-            setBookingType = await bookingTypeData.BookingType
+            newObj.save()
+                .then(data => {
+                    res.send({
+                        status: 200,
+                        success: true,
+                        message: "Appointment booking done successfully",
+                        data: data
+                    });
+                })
+                .catch(err => {
+                    res.send({
+                        status: 400,
+                        success: false,
+                        message: "Error while booking the appointment!",
+                        data: err
+                    });
+                })
         }
         else {
-            setBookingType = await "odd";
-            const newBookTypeObj = new BookingTypeSchema({
-                BookingType: "odd",
-                BookingDate: BookingDate,
+            let bookingTypeData = await BookingTypeSchema.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate });
+            var setBookingType;
+            if (bookingTypeData) {
+                setBookingType = await bookingTypeData.BookingType
+            }
+            else {
+                setBookingType = await "odd";
+                const newBookTypeObj = new BookingTypeSchema({
+                    BookingType: "odd",
+                    BookingDate: BookingDate,
+                    Hospital: HospitalID,
+                    Doctor: DoctorID
+                });
+                await newBookTypeObj.save();
+            }
+            console.log("setBookingType :", setBookingType);
+            let newObj = new Appointment({
+                User: UserID,
                 Hospital: HospitalID,
-                Doctor: DoctorID
-            });
-            await newBookTypeObj.save();
+                Doctor: DoctorID,
+                BookingDate: BookingDate,
+                TokenNumber: setBookingType ? (setBookingType === "odd" ? 1 : 2) : 1,
+                BookingType: setBookingType
+            })
+            await newObj.save()
+                .then(data => {
+                    res.send({
+                        status: 200,
+                        success: true,
+                        message: "Appointment booking done successfully",
+                        data: data
+                    });
+                })
+                .catch(err => {
+                    res.send({
+                        status: 400,
+                        success: false,
+                        message: "Error while booking the appointment!",
+                        data: err
+                    });
+                })
         }
-        console.log("setBookingType :", setBookingType);
-        let newObj = new Appointment({
-            User: UserID,
-            Hospital: HospitalID,
-            Doctor: DoctorID,
-            BookingDate: BookingDate,
-            TokenNumber: setBookingType ? (setBookingType === "odd" ? 1 : 2) : 1,
-            BookingType: setBookingType
-        })
-        await newObj.save()
-            .then(data => {
-                res.send({
-                    status: 200,
-                    success: true,
-                    message: "Appointment booking done successfully",
-                    data: data
-                });
-            })
-            .catch(err => {
-                res.send({
-                    status: 400,
-                    success: false,
-                    message: "Error while booking the appointment!",
-                    data: err
-                });
-            })
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
     }
 }
 
 exports.getHospitals = async (req, res) => {
-    let hospitals = await HospitalSchema.find();
-    if (hospitals) {
-        res.send({
-            status: 200,
-            success: true,
-            message: "Hospitals found successfully",
-            data: hospitals
-        });
+    try {
+        let hospitals = await HospitalSchema.find();
+        if (hospitals) {
+            res.send({
+                status: 200,
+                success: true,
+                message: "Hospitals found successfully",
+                data: hospitals
+            });
+        }
+        else {
+            res.send({
+                status: 400,
+                success: false,
+                message: "No data found",
+                data: hospitals
+            });
+        }
     }
-    else {
-        res.send({
+    catch (err) {
+        return res.send({
             status: 400,
             success: false,
-            message: "No data found",
-            data: hospitals
+            message: "Something went wrong",
+            data: err
         });
     }
 }
 
 exports.getDoctorsByHospital = async (req, res) => {
     let hospitalId = req.query.hospitalId;
-    let doctors = await Doctor.find({ Hospital: ObjectId(hospitalId) }).populate('Hospital');
-    if (doctors) {
-        res.send({
-            status: 200,
-            success: true,
-            message: "Doctors found successfully",
-            data: doctors
+    if (!hospitalId) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Hospital Id can not be empty!"
         });
     }
-    else {
+
+    try {
+        let doctors = await Doctor.find({ Hospital: ObjectId(hospitalId) }).populate('Hospital');
+        if (doctors) {
+            res.send({
+                status: 200,
+                success: true,
+                message: "Doctors found successfully",
+                data: doctors
+            });
+        }
+        else {
+            res.send({
+                status: 400,
+                success: false,
+                message: "No data found",
+                data: doctors
+            });
+        }
+    }
+    catch (err) {
         res.send({
             status: 400,
             success: false,
-            message: "No data found",
-            data: doctors
+            message: "Something went wrong",
+            data: err
         });
     }
 }
