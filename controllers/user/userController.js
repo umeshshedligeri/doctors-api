@@ -72,18 +72,11 @@ exports.createUser = async (req, res) => {
             message: "Content can not be empty!"
         });
     }
-    if (!req.body.FirstName) {
+    if (!req.body.FullName) {
         return res.send({
             status: 400,
             success: false,
             message: "First name can not be empty!"
-        });
-    }
-    if (!req.body.LastName) {
-        return res.send({
-            status: 400,
-            success: false,
-            message: "Last name can not be empty!"
         });
     }
     if (!req.body.MobileNumber) {
@@ -104,8 +97,7 @@ exports.createUser = async (req, res) => {
     try {
         let salt = bcrypt.genSaltSync(10);
         const newUserOBj = new User({
-            FirstName: req.body.FirstName,
-            LastName: req.body.LastName,
+            FullName: req.body.FullName,
             MobileNumber: req.body.MobileNumber,
             Password: bcrypt.hashSync(req.body.Password, salt),
             Role: "user"
@@ -479,8 +471,7 @@ exports.login = async (req, res) => {
             if (bcrypt.compareSync(req.body.Password, user.Password)) {
                 let customToken = {
                     _id: user._id,
-                    FirstName: user.FirstName,
-                    LastName: user.LastName,
+                    FullName: user.FullName,
                     MobileNumber: user.MobileNumber,
                     Role: user.Role
                 }
