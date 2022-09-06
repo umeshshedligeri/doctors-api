@@ -10,8 +10,8 @@ router.post('/createUser', userController.createUser);
 router.post('/generateOTP', userController.generateOTP);
 router.put('/verifyOTP', userController.verifyOTP);
 router.post('/login', userController.login);
-router.get('/getHospitals', auth, userController.getHospitals);
-router.get('/getDoctorsByHospital', auth, userController.getDoctorsByHospital);
-router.post('/bookAppointment', auth, userController.bookAppointment);
+router.get('/getHospitals', userController.getHospitals);
+router.get('/getDoctorsByHospital', userController.getDoctorsByHospital);
+router.post('/bookAppointment', userController.bookAppointment);
 
 module.exports = router;
