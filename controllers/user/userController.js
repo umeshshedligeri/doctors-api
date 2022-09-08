@@ -167,6 +167,44 @@ exports.getUsers = async (req, res) => {
         })
 }
 
+exports.getUserDetails = async (req, res) => {
+    let UserID = req.params.UserID;
+    if (!UserID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "User ID can not be empty!"
+        });
+    }
+    try {
+        User.findById(UserID)
+            .then(data => {
+                res.send({
+                    status: 200,
+                    success: true,
+                    message: "Users found successfully",
+                    data: data
+                });
+            })
+            .catch(err => {
+                res.send({
+                    status: 400,
+                    success: false,
+                    message: "Error while fetching the users!",
+                    data: err
+                });
+            })
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
 // exports.generateOTP = async (req, res) => {
 //     // Validate request
 //     if (!req.body) {
