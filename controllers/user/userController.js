@@ -205,6 +205,56 @@ exports.getUserDetails = async (req, res) => {
     }
 }
 
+
+exports.checkUserExists = async (req, res) => {
+    let MobileNumber = req.query.MobileNumber;
+    if (!MobileNumber) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Mobile Number can not be empty!"
+        });
+    }
+    try {
+        User.findOne({ MobileNumber: MobileNumber })
+            .then(data => {
+                if (data) {
+                    res.send({
+                        status: 200,
+                        success: true,
+                        message: "User exists",
+                        data: data
+                    });
+                }
+                else {
+                    res.send({
+                        status: 400,
+                        success: false,
+                        message: "User not found",
+                        data: data
+                    });
+                }
+            })
+            .catch(err => {
+                res.send({
+                    status: 400,
+                    success: false,
+                    message: "Error while fetching the user!",
+                    data: err
+                });
+            })
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
+
 // exports.generateOTP = async (req, res) => {
 //     // Validate request
 //     if (!req.body) {
@@ -269,6 +319,7 @@ exports.getUserDetails = async (req, res) => {
 //         }
 //     })
 // }
+
 
 exports.generateOTP = async (req, res) => {
     // Validate request

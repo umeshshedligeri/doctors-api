@@ -8,6 +8,7 @@ router.get('/', userController.getUsers);
 /* Create a user */
 router.post('/createUser', userController.createUser);
 router.get('/getUserDetails/:UserID', userController.getUserDetails);
+router.get('/userExists', userController.checkUserExists);
 router.post('/generateOTP', userController.generateOTP);
 router.put('/verifyOTP', userController.verifyOTP);
 router.post('/login', userController.login);
