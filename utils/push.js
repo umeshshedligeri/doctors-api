@@ -1,14 +1,14 @@
 var AWS = require('aws-sdk');
 
 AWS.config.update({
-    accessKeyId: '',
-    secretAccessKey: '',
-    region: ''
+    accessKeyId: 'AKIA2XEJXDWSPAFB5I5U',
+    secretAccessKey: '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',
+    region: 'ap-south-1'
 });
 
 var sns = new AWS.SNS();
 
-var platform_arn = ''; // save in constants on device as 'android' or 'ios'
+var platform_arn = "arn:aws:sns:ap-south-1:736875716004:app/BAIDU/DoctorApplication"; // save in constants on device as 'android' or 'ios'
 var device_token = ''; // push token id when user login and save in database
 var user_data = ''; //first name and last name for aws console
 

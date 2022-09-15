@@ -1,5 +1,6 @@
 let db = require("../../config/db");
 let OTP = require("../../utils/randomNumber");
+let sendOtp = require("../../utils/sendOtp");
 let User = require("../../models/user");
 let Appointment = require("../../models/bookAppointment");
 let BookingTypeSchema = require("../../models/bookingType");
@@ -341,7 +342,7 @@ exports.generateOTP = async (req, res) => {
         return
     }
 
-    try {
+    // try {
         let otp = OTP.randomNumberGenerator();
         let user = await Otp_verification.findOne({ MobileNumber: MobileNumber });
         let otpObj = new Otp_verification({
@@ -351,6 +352,9 @@ exports.generateOTP = async (req, res) => {
         if (user) {
             let otpUpdate = await Otp_verification.findByIdAndUpdate(user.id, { OTP: otp });
             if (otpUpdate) {
+               let send = await sendOtp(MobileNumber,otp);
+            //    let send = await sendOtp();
+               console.log("send 1:",send);
                 res.send({
                     status: 200,
                     success: true,
@@ -369,7 +373,10 @@ exports.generateOTP = async (req, res) => {
         }
         else {
             otpObj.save()
-                .then(data => {
+                .then(async(data) => {
+                    let send = await sendOtp(MobileNumber,otp);
+                    // let send = await sendOtp();
+                    console.log("send 2:",send);
                     res.send({
                         status: 200,
                         success: true,
@@ -386,15 +393,15 @@ exports.generateOTP = async (req, res) => {
                     });
                 })
         }
-    }
-    catch (err) {
-        return res.send({
-            status: 400,
-            success: false,
-            message: "Something went wrong",
-            data: err
-        });
-    }
+    // }
+    // catch (err) {
+    //     return res.send({
+    //         status: 400,
+    //         success: false,
+    //         message: "Something went wrong",
+    //         data: err
+    //     });
+    // }
 }
 
 // exports.verifyOTP = async (req, res) => {
