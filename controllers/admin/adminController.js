@@ -133,3 +133,41 @@ exports.addDoctors = async (req, res) => {
         });
     }
 }
+
+exports.getDoctorInfo = async (req, res) => {
+    let doctorId = req.params.doctorId;
+    if (!doctorId) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Doctor Id can not be empty!"
+        });
+    }
+    try {
+        let doctor = await Doctor.findById(doctorId).populate('Hospital');
+        if (doctor) {
+            return res.send({
+                status: 200,
+                success: true,
+                message: "Doctor details found successfully",
+                data: doctor
+            });
+        }
+        else {
+            return res.send({
+                status: 400,
+                success: false,
+                message: "No data found"
+            });
+        }
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+
+}
