@@ -88,6 +88,13 @@ exports.createUser = async (req, res) => {
             message: "Mobile number can not be empty!"
         });
     }
+    if (!req.body.Email) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Email can not be empty!"
+        });
+    }
     if (!req.body.Password) {
         return res.send({
             status: 400,
@@ -101,6 +108,7 @@ exports.createUser = async (req, res) => {
         const newUserOBj = new User({
             FullName: req.body.FullName,
             MobileNumber: req.body.MobileNumber,
+            Email: req.body.Email,
             Password: bcrypt.hashSync(req.body.Password, salt),
             Role: "user"
         })

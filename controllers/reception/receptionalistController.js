@@ -1,5 +1,6 @@
 const BookingTypeSchema = require("../../models/bookingType");
 const DoctorStatusSchema = require("../../models/doctorStatus");
+const TokenQueueSchema = require("../../models/tokenQueue");
 
 
 exports.updateBookingType = async (req, res) => {
@@ -142,6 +143,145 @@ exports.setDoctorActivity = async (req, res) => {
                         data: err
                     });
                 })
+        }
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
+exports.updateTokenQueue = async (req, res) => {
+    let { CurrentToken, BookingDate, HospitalID, DoctorID } = req.body;
+    if (!CurrentToken) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Current Token can not be empty!"
+        });
+    }
+    if (!BookingDate) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Booking Date can not be empty!"
+        });
+    }
+    if (!HospitalID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Hospital ID can not be empty!"
+        });
+    }
+    if (!DoctorID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Doctor ID can not be empty!"
+        });
+    }
+    try {
+        let tokenQueueData = await TokenQueueSchema.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate });
+        if (tokenQueueData) {
+            let tokenUpdate = await TokenQueueSchema.findByIdAndUpdate(tokenQueueData.id, { CurrentToken: CurrentToken });
+            if (tokenUpdate) {
+                res.send({
+                    status: 200,
+                    success: true,
+                    message: "Token queue updated successfully",
+                    data: tokenUpdate
+                });
+            }
+            else {
+                res.send({
+                    status: 400,
+                    success: false,
+                    message: "Error while updating the token queue",
+                    data: tokenUpdate
+                });
+            }
+        }
+        else {
+            const updateTokenObj = new TokenQueueSchema({
+                CurrentToken: CurrentToken,
+                BookingDate: BookingDate,
+                Hospital: HospitalID,
+                Doctor: DoctorID
+            });
+            updateTokenObj.save()
+                .then(data => {
+                    res.send({
+                        status: 200,
+                        success: true,
+                        message: "Token queue updated successfully",
+                        data: data
+                    });
+                })
+                .catch(err => {
+                    res.send({
+                        status: 400,
+                        success: false,
+                        message: "Error while updating the token queue",
+                        data: err
+                    });
+                })
+        }
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
+exports.getTokenQueue = async (req, res) => {
+    let { BookingDate, HospitalID, DoctorID } = req.query;
+    if (!BookingDate) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Booking Date can not be empty!"
+        });
+    }
+    if (!HospitalID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Hospital ID can not be empty!"
+        });
+    }
+    if (!DoctorID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Doctor ID can not be empty!"
+        });
+    }
+    try {
+        let tokenQueueData = await TokenQueueSchema.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate });
+        if (tokenQueueData) {
+            res.send({
+                status: 200,
+                success: true,
+                message: "Token queue found successfully",
+                data: tokenQueueData
+            });
+        }
+        else {
+            res.send({
+                status: 400,
+                success: false,
+                message: "Queue is not yet started",
+                data: tokenQueueData
+            });
         }
     }
     catch (err) {

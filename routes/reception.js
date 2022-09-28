@@ -5,5 +5,7 @@ const auth = require("../middlewares/auth");
 
 router.post('/updateBookingType',receptionController.updateBookingType);
 router.post('/setDoctorActivity',receptionController.setDoctorActivity);
+router.post('/updateTokenQueue',receptionController.updateTokenQueue);
+router.get('/getTokenQueue',receptionController.getTokenQueue);
 
 module.exports = router;
