@@ -7,6 +7,7 @@ let BookingTypeSchema = require("../../models/bookingType");
 let Otp_verification = require("../../models/otp_verification");
 let HospitalSchema = require("../../models/hospital");
 let Doctor = require("../../models/doctors");
+let DoctorStatusSchema = require("../../models/doctorStatus");
 let bcrypt = require("bcryptjs");
 
 let generateJwt = require("../../utils/jwt");
@@ -343,56 +344,56 @@ exports.generateOTP = async (req, res) => {
     }
 
     // try {
-        let otp = OTP.randomNumberGenerator();
-        let user = await Otp_verification.findOne({ MobileNumber: MobileNumber });
-        let otpObj = new Otp_verification({
-            MobileNumber: MobileNumber,
-            OTP: otp
-        })
-        if (user) {
-            let otpUpdate = await Otp_verification.findByIdAndUpdate(user.id, { OTP: otp });
-            if (otpUpdate) {
-               let send = await sendOtp(MobileNumber,otp);
+    let otp = OTP.randomNumberGenerator();
+    let user = await Otp_verification.findOne({ MobileNumber: MobileNumber });
+    let otpObj = new Otp_verification({
+        MobileNumber: MobileNumber,
+        OTP: otp
+    })
+    if (user) {
+        let otpUpdate = await Otp_verification.findByIdAndUpdate(user.id, { OTP: otp });
+        if (otpUpdate) {
+            let send = await sendOtp(MobileNumber, otp);
             //    let send = await sendOtp();
-               console.log("send 1:",send);
+            console.log("send 1:", send);
+            res.send({
+                status: 200,
+                success: true,
+                message: "OTP updated successfully",
+                data: otpUpdate
+            });
+        }
+        else {
+            res.send({
+                status: 400,
+                success: false,
+                message: "Error while updating the otp!",
+                data: otpUpdate
+            });
+        }
+    }
+    else {
+        otpObj.save()
+            .then(async (data) => {
+                let send = await sendOtp(MobileNumber, otp);
+                // let send = await sendOtp();
+                console.log("send 2:", send);
                 res.send({
                     status: 200,
                     success: true,
-                    message: "OTP updated successfully",
-                    data: otpUpdate
+                    message: "OTP sent successfully",
+                    data: data
                 });
-            }
-            else {
+            })
+            .catch(err => {
                 res.send({
                     status: 400,
                     success: false,
-                    message: "Error while updating the otp!",
-                    data: otpUpdate
+                    message: "Error while storing the otp!",
+                    data: err
                 });
-            }
-        }
-        else {
-            otpObj.save()
-                .then(async(data) => {
-                    let send = await sendOtp(MobileNumber,otp);
-                    // let send = await sendOtp();
-                    console.log("send 2:",send);
-                    res.send({
-                        status: 200,
-                        success: true,
-                        message: "OTP sent successfully",
-                        data: data
-                    });
-                })
-                .catch(err => {
-                    res.send({
-                        status: 400,
-                        success: false,
-                        message: "Error while storing the otp!",
-                        data: err
-                    });
-                })
-        }
+            })
+    }
     // }
     // catch (err) {
     //     return res.send({
@@ -638,77 +639,88 @@ exports.bookAppointment = async (req, res) => {
     }
 
     try {
-        let appointments = await Appointment.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate }).sort({ 'createdAt': -1 });
-        console.log("appointments :", appointments);
-        if (appointments) {
-            let newObj = new Appointment({
-                User: UserID,
-                Hospital: HospitalID,
-                Doctor: DoctorID,
-                BookingDate: BookingDate,
-                TokenNumber: appointments.TokenNumber + 2,
-                BookingType: appointments.BookingType
-            })
-            newObj.save()
-                .then(data => {
-                    res.send({
-                        status: 200,
-                        success: true,
-                        message: "Appointment booking done successfully",
-                        data: data
-                    });
-                })
-                .catch(err => {
-                    res.send({
-                        status: 400,
-                        success: false,
-                        message: "Error while booking the appointment!",
-                        data: err
-                    });
-                })
+        let doctorStatusData = await DoctorStatusSchema.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate });
+        if (doctorStatusData && doctorStatusData.Activity === "disable") {
+            console.log("not allowed for booking")
+            return res.send({
+                status: 400,
+                success: false,
+                message: "Doctor is not available for the selected Date"
+            });
         }
         else {
-            let bookingTypeData = await BookingTypeSchema.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate });
-            var setBookingType;
-            if (bookingTypeData) {
-                setBookingType = await bookingTypeData.BookingType
+            let appointments = await Appointment.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate }).sort({ 'createdAt': -1 });
+            console.log("appointments :", appointments);
+            if (appointments) {
+                let newObj = new Appointment({
+                    User: UserID,
+                    Hospital: HospitalID,
+                    Doctor: DoctorID,
+                    BookingDate: BookingDate,
+                    TokenNumber: appointments.TokenNumber + 2,
+                    BookingType: appointments.BookingType
+                })
+                newObj.save()
+                    .then(data => {
+                        res.send({
+                            status: 200,
+                            success: true,
+                            message: "Appointment booking done successfully",
+                            data: data
+                        });
+                    })
+                    .catch(err => {
+                        res.send({
+                            status: 400,
+                            success: false,
+                            message: "Error while booking the appointment!",
+                            data: err
+                        });
+                    })
             }
             else {
-                setBookingType = await "odd";
-                const newBookTypeObj = new BookingTypeSchema({
-                    BookingType: "odd",
-                    BookingDate: BookingDate,
+                let bookingTypeData = await BookingTypeSchema.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate });
+                var setBookingType;
+                if (bookingTypeData) {
+                    setBookingType = await bookingTypeData.BookingType
+                }
+                else {
+                    setBookingType = await "odd";
+                    const newBookTypeObj = new BookingTypeSchema({
+                        BookingType: "odd",
+                        BookingDate: BookingDate,
+                        Hospital: HospitalID,
+                        Doctor: DoctorID
+                    });
+                    await newBookTypeObj.save();
+                }
+                console.log("setBookingType :", setBookingType);
+                let newObj = new Appointment({
+                    User: UserID,
                     Hospital: HospitalID,
-                    Doctor: DoctorID
-                });
-                await newBookTypeObj.save();
+                    Doctor: DoctorID,
+                    BookingDate: BookingDate,
+                    TokenNumber: setBookingType ? (setBookingType === "odd" ? 1 : 2) : 1,
+                    BookingType: setBookingType
+                })
+                await newObj.save()
+                    .then(data => {
+                        res.send({
+                            status: 200,
+                            success: true,
+                            message: "Appointment booking done successfully",
+                            data: data
+                        });
+                    })
+                    .catch(err => {
+                        res.send({
+                            status: 400,
+                            success: false,
+                            message: "Error while booking the appointment!",
+                            data: err
+                        });
+                    })
             }
-            console.log("setBookingType :", setBookingType);
-            let newObj = new Appointment({
-                User: UserID,
-                Hospital: HospitalID,
-                Doctor: DoctorID,
-                BookingDate: BookingDate,
-                TokenNumber: setBookingType ? (setBookingType === "odd" ? 1 : 2) : 1,
-                BookingType: setBookingType
-            })
-            await newObj.save()
-                .then(data => {
-                    res.send({
-                        status: 200,
-                        success: true,
-                        message: "Appointment booking done successfully",
-                        data: data
-                    });
-                })
-                .catch(err => {
-                    res.send({
-                        status: 400,
-                        success: false,
-                        message: "Error while booking the appointment!",
-                        data: err
-                    });
-                })
         }
     }
     catch (err) {

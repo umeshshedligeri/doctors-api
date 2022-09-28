@@ -4,5 +4,6 @@ let receptionController = require("../controllers/reception/receptionalistContro
 const auth = require("../middlewares/auth");
 
 router.post('/updateBookingType',receptionController.updateBookingType);
+router.post('/setDoctorActivity',receptionController.setDoctorActivity);
 
 module.exports = router;
