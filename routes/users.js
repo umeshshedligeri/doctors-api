@@ -15,5 +15,8 @@ router.post('/login', userController.login);
 router.get('/getHospitals', userController.getHospitals);
 router.get('/getDoctorsByHospital', userController.getDoctorsByHospital);
 router.post('/bookAppointment', userController.bookAppointment);
+router.post('/changePassword', userController.changePassword);
+router.post('/forgotPasswordStep1', userController.forgotPasswordStep1);
+router.post('/forgotPasswordStep2', userController.forgotPasswordStep2);
 
 module.exports = router;

@@ -351,66 +351,66 @@ exports.generateOTP = async (req, res) => {
         return
     }
 
-    // try {
-    let otp = OTP.randomNumberGenerator();
-    let user = await Otp_verification.findOne({ MobileNumber: MobileNumber });
-    let otpObj = new Otp_verification({
-        MobileNumber: MobileNumber,
-        OTP: otp
-    })
-    if (user) {
-        let otpUpdate = await Otp_verification.findByIdAndUpdate(user.id, { OTP: otp });
-        if (otpUpdate) {
-            let send = await sendOtp(MobileNumber, otp);
-            //    let send = await sendOtp();
-            console.log("send 1:", send);
-            res.send({
-                status: 200,
-                success: true,
-                message: "OTP updated successfully",
-                data: otpUpdate
-            });
-        }
-        else {
-            res.send({
-                status: 400,
-                success: false,
-                message: "Error while updating the otp!",
-                data: otpUpdate
-            });
-        }
-    }
-    else {
-        otpObj.save()
-            .then(async (data) => {
+    try {
+        let otp = OTP.randomNumberGenerator();
+        let user = await Otp_verification.findOne({ MobileNumber: MobileNumber });
+        let otpObj = new Otp_verification({
+            MobileNumber: MobileNumber,
+            OTP: otp
+        })
+        if (user) {
+            let otpUpdate = await Otp_verification.findByIdAndUpdate(user.id, { OTP: otp }, { new: true });
+            if (otpUpdate) {
                 let send = await sendOtp(MobileNumber, otp);
-                // let send = await sendOtp();
-                console.log("send 2:", send);
+                //    let send = await sendOtp();
+                console.log("send 1:", send);
                 res.send({
                     status: 200,
                     success: true,
-                    message: "OTP sent successfully",
-                    data: data
+                    message: "OTP updated successfully",
+                    data: otpUpdate
                 });
-            })
-            .catch(err => {
+            }
+            else {
                 res.send({
                     status: 400,
                     success: false,
-                    message: "Error while storing the otp!",
-                    data: err
+                    message: "Error while updating the otp!",
+                    data: otpUpdate
                 });
-            })
+            }
+        }
+        else {
+            otpObj.save()
+                .then(async (data) => {
+                    let send = await sendOtp(MobileNumber, otp);
+                    // let send = await sendOtp();
+                    console.log("send 2:", send);
+                    res.send({
+                        status: 200,
+                        success: true,
+                        message: "OTP sent successfully",
+                        data: data
+                    });
+                })
+                .catch(err => {
+                    res.send({
+                        status: 400,
+                        success: false,
+                        message: "Error while storing the otp!",
+                        data: err
+                    });
+                })
+        }
     }
-    // }
-    // catch (err) {
-    //     return res.send({
-    //         status: 400,
-    //         success: false,
-    //         message: "Something went wrong",
-    //         data: err
-    //     });
-    // }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
 }
 
 // exports.verifyOTP = async (req, res) => {
@@ -797,6 +797,195 @@ exports.getDoctorsByHospital = async (req, res) => {
                 success: false,
                 message: "No data found",
                 data: doctors
+            });
+        }
+    }
+    catch (err) {
+        res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
+exports.changePassword = async (req, res) => {
+    let { oldPassword, newPassword, userId } = req.body;
+    if (!oldPassword) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Old password can not be empty!"
+        });
+    }
+    if (!newPassword) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "New password can not be empty!"
+        });
+    }
+    try {
+        let user = await User.findById(userId);
+        if (user) {
+            if (bcrypt.compareSync(req.body.oldPassword, user.Password)) {
+                let salt = bcrypt.genSaltSync(10);
+                let Password = bcrypt.hashSync(newPassword, salt);
+                let passwordUpdate = await User.findByIdAndUpdate(userId, { Password: Password });
+                if (passwordUpdate) {
+                    res.send({
+                        status: 200,
+                        success: true,
+                        message: "Password changed successfully",
+                        data: passwordUpdate
+                    });
+                }
+                else {
+                    return res.send({
+                        status: 400,
+                        success: false,
+                        message: "Error while changing the password"
+                    });
+                }
+            }
+            else {
+                return res.send({
+                    status: 400,
+                    success: false,
+                    message: "Incorrect old password"
+                });
+            }
+        }
+        else {
+            return res.send({
+                status: 400,
+                success: false,
+                message: "User not found"
+            });
+        }
+    }
+    catch (err) {
+        res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
+exports.forgotPasswordStep1 = async (req, res) => {
+    let MobileNumber = req.body.MobileNumber;
+    if (!MobileNumber) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Mobile Number can not be empty!"
+        });
+    }
+    try {
+        let user = await User.findOne({ MobileNumber: MobileNumber });
+        if (user) {
+            let otp = OTP.randomNumberGenerator();
+            let updateOtp = await User.findByIdAndUpdate(user.id, { OTP: otp }, { new: true });
+            if (updateOtp) {
+                let send = await sendOtp(MobileNumber, otp);
+                res.send({
+                    status: 200,
+                    success: true,
+                    message: "OTP sent for setting new password",
+                    data: updateOtp
+                });
+            }
+            else {
+                return res.send({
+                    status: 400,
+                    success: false,
+                    message: "Error while sending an otp"
+                });
+            }
+        }
+        else {
+            res.send({
+                status: 400,
+                success: false,
+                message: "User not found"
+            });
+        }
+    }
+    catch (err) {
+        res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
+exports.forgotPasswordStep2 = async (req, res) => {
+    let { MobileNumber, Password, OTP } = req.body;
+    if (!MobileNumber) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Mobile Number can not be empty!"
+        });
+    }
+    if (!Password) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Passwords can not be empty!"
+        });
+    }
+    if (!OTP) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "OTP can not be empty!"
+        });
+    }
+    try {
+        let user = await User.findOne({ MobileNumber: MobileNumber });
+        if (user) {
+            if (user.OTP == OTP) {
+                let salt = bcrypt.genSaltSync(10);
+                let newPassword = bcrypt.hashSync(Password, salt);
+                let updatePassword = await User.findOneAndUpdate(
+                    { MobileNumber: MobileNumber },
+                    { $set: { Password: newPassword } },
+                    { new: true });
+                if (updatePassword) {
+                    res.send({
+                        status: 200,
+                        success: true,
+                        message: "Password updated successfully",
+                        data: updatePassword
+                    });
+                }
+                else {
+                    return res.send({
+                        status: 400,
+                        success: false,
+                        message: "Error while updating new password"
+                    });
+                }
+            }
+            else {
+                res.send({
+                    status: 400,
+                    success: false,
+                    message: "Incorrect OTP"
+                }); s
+            }
+        }
+        else {
+            res.send({
+                status: 400,
+                success: false,
+                message: "User not found"
             });
         }
     }

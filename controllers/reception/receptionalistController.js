@@ -293,3 +293,54 @@ exports.getTokenQueue = async (req, res) => {
         });
     }
 }
+
+exports.getDoctorActivity = async (req, res) => {
+    let { BookingDate, HospitalID, DoctorID } = req.query;
+    if (!BookingDate) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Booking Date can not be empty!"
+        });
+    }
+    if (!HospitalID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Hospital ID can not be empty!"
+        });
+    }
+    if (!DoctorID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Doctor ID can not be empty!"
+        });
+    }
+    try {
+        let doctorStatusData = await DoctorStatusSchema.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate });
+        if (doctorStatusData && doctorStatusData.Activity === "disable") {
+            return res.send({
+                status: 400,
+                success: false,
+                message: "Doctor is not available for the selected Date"
+            });
+        }
+        else {
+            return res.send({
+                status: 200,
+                success: true,
+                message: "Doctor is available for booking",
+                data: null
+            });
+        }
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
