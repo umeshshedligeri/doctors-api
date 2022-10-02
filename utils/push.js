@@ -1,4 +1,5 @@
 var AWS = require('aws-sdk');
+const Config = require("../config/application");
 
 AWS.config.update({
     accessKeyId: 'AKIA2XEJXDWSPAFB5I5U',
@@ -8,24 +9,93 @@ AWS.config.update({
 
 var sns = new AWS.SNS();
 
-var platform_arn = "arn:aws:sns:ap-south-1:736875716004:app/BAIDU/DoctorApplication"; // save in constants on device as 'android' or 'ios'
-var device_token = ''; // push token id when user login and save in database
-var user_data = ''; //first name and last name for aws console
 
-//ceate ARN  
-sns.createPlatformEndpoint({
-    PlatformApplicationArn: platform_arn,
-    Token: device_token,
-    CustomUserData: user_data
-}, (err, data) => {
-    if (err) {
-        console.log(err.stack);
-        return;
+const generateArn = (tokenObj) => {
+    let params = {
+        PlatformApplicationArn: Config.platFormApplicationArn,
+        Token: tokenObj.fcmRegToken,
+        CustomUserData: tokenObj.email
     }
-    else {
-        console.log("device token",data.EndpointArn);    //save in DB : DEVICE_ARN : to send push notification
+    return new Promise(async (resolve, reject) => {
+        try {
+            await sns.createPlatformEndpoint(params, (err, data) => {
+                if (err) {
+                    console.log("Error :", err);
+                    return;
+                }
+                else {
+                    resolve({ data })
+                    console.log("device token", data.EndpointArn);    //save in DB : DEVICE_ARN : to send push notification
+                }
+            });
+        }
+        catch (e) {
+            reject(e)
+        }
+    })
+}
+
+const publishNotification = async (targetArn, payload) => {
+    let params = {
+        Message: JSON.stringify({
+            GCM: payload
+        }),
+        MessageStructure: "json",
+        TargetArn: `${targetArn}`
     }
-});
+    console.log("sending push :", params);
+    return new Promise(async (resolve, reject) => {
+        try {
+            let paramsCheck = {
+                EndpointArn: `${targetArn}`
+            }
+            await sns.getEndpointAttributes(paramsCheck, (err, data) => {
+                if (err) {
+                    console.log("Error :", err, err.stack);
+                }
+                else {
+                    console.log("data :", data);
+                    if (data && data.Attributes && data.Attributes.Enabled == "true") {
+                        sns.publish(params, (err, data) => {
+                            if (err) {
+                                console.log("Error in sending push notification :", err);
+                            }
+                            else {
+                                console.log("Push notifcation sent successfully :", data);
+                                resolve(true)
+                            }
+                        })
+                    }
+                    else {
+                        resolve(false)
+                    }
+                }
+            })
+        }
+        catch (e) {
+            reject(e)
+        }
+    })
+}
+
+// var platform_arn = "arn:aws:sns:ap-south-1:736875716004:app/BAIDU/DoctorApplication"; // save in constants on device as 'android' or 'ios'
+// var device_token = ''; // push token id when user login and save in database
+// var user_data = ''; //first name and last name for aws console
+
+// //ceate ARN
+// sns.createPlatformEndpoint({
+//     PlatformApplicationArn: platform_arn,
+//     Token: device_token,
+//     CustomUserData: user_data
+// }, (err, data) => {
+//     if (err) {
+//         console.log(err.stack);
+//         return;
+//     }
+//     else {
+//         console.log("device token", data.EndpointArn);    //save in DB : DEVICE_ARN : to send push notification
+//     }
+// });
 
 
 //delete ARN
@@ -92,3 +162,8 @@ sns.createPlatformEndpoint({
 //         });
 //     }
 // });
+
+module.exports = {
+    generateArn,
+    publishNotification
+}

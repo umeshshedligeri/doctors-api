@@ -4,5 +4,6 @@ module.exports = {
     user: environmentDetails.USERNAME,
     password: environmentDetails.PASSWORD,
     dbName: environmentDetails.DBNAME,
-    secret_key : environmentDetails.SECRET_KEY
+    secret_key: environmentDetails.SECRET_KEY,
+    platFormApplicationArn: environmentDetails.PLATFORM_APPLICATION_ARN
 }

@@ -11,6 +11,7 @@ let DoctorStatusSchema = require("../../models/doctorStatus");
 let bcrypt = require("bcryptjs");
 
 let generateJwt = require("../../utils/jwt");
+let push = require("../../utils/push");
 
 
 var ObjectId = require('mongoose').Types.ObjectId;
@@ -104,6 +105,13 @@ exports.createUser = async (req, res) => {
     }
 
     try {
+        let tokenObj = {
+            fcmRegToken: "dwjwhwvckvkv",
+            email: "user@gmail.com"
+        }
+        // let arn = await push.generateArn(tokenObj);
+        // console.log("arn :", arn);
+
         let salt = bcrypt.genSaltSync(10);
         const newUserOBj = new User({
             FullName: req.body.FullName,
@@ -958,7 +966,7 @@ exports.forgotPasswordStep2 = async (req, res) => {
                     { $set: { Password: newPassword } },
                     { new: true });
                 if (updatePassword) {
-                    res.send({
+                    return res.send({
                         status: 200,
                         success: true,
                         message: "Password updated successfully",
@@ -974,15 +982,15 @@ exports.forgotPasswordStep2 = async (req, res) => {
                 }
             }
             else {
-                res.send({
+                return res.send({
                     status: 400,
                     success: false,
                     message: "Incorrect OTP"
-                }); s
+                });
             }
         }
         else {
-            res.send({
+            return res.send({
                 status: 400,
                 success: false,
                 message: "User not found"
@@ -990,7 +998,7 @@ exports.forgotPasswordStep2 = async (req, res) => {
         }
     }
     catch (err) {
-        res.send({
+        return res.send({
             status: 400,
             success: false,
             message: "Something went wrong",
