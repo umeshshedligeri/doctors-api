@@ -586,7 +586,8 @@ exports.login = async (req, res) => {
                     _id: user._id,
                     FullName: user.FullName,
                     MobileNumber: user.MobileNumber,
-                    Role: user.Role
+                    Role: user.Role,
+                    Email : user.Email
                 }
                 let accessToken = await generateJwt(customToken);
                 customToken["token"] = await accessToken;
