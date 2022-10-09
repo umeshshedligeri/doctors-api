@@ -5,5 +5,6 @@ module.exports = {
     password: environmentDetails.PASSWORD,
     dbName: environmentDetails.DBNAME,
     secret_key: environmentDetails.SECRET_KEY,
-    platFormApplicationArn: environmentDetails.PLATFORM_APPLICATION_ARN
+    platFormApplicationArn: environmentDetails.PLATFORM_APPLICATION_ARN,
+    fcm_server_key: environmentDetails.FCM_SERVER_KEY
 }

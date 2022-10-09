@@ -1,6 +1,12 @@
 const BookingTypeSchema = require("../../models/bookingType");
 const DoctorStatusSchema = require("../../models/doctorStatus");
 const TokenQueueSchema = require("../../models/tokenQueue");
+let Appointment = require("../../models/bookAppointment");
+let Doctor = require("../../models/doctors");
+let User = require("../../models/user");
+var ObjectId = require('mongoose').Types.ObjectId;
+const Config = require("../../config/application");
+const axios = require('axios');
 
 
 exports.updateBookingType = async (req, res) => {
@@ -127,7 +133,36 @@ exports.setDoctorActivity = async (req, res) => {
                 Doctor: DoctorID
             });
             newObj.save()
-                .then(data => {
+                .then(async (data) => {
+                    let doctorsData = await Doctor.findOne({ _id: ObjectId(DoctorID), Hospital: HospitalID }).populate("Hospital");
+                    console.log("doctorsData :", doctorsData);
+                    if (doctorsData) {
+                        let url = "https://fcm.googleapis.com/fcm/send";
+                        let fcmServerKey = Config.fcm_server_key;
+                        let deviceTokens = []
+                        let users = await User.find();
+                        if (users) {
+                            users.map(u => {
+                                deviceTokens.push(u.DeviceToken);
+                            })
+                        }
+                        console.log("deviceTokens :", deviceTokens);
+                        let notificationObj = {
+                            "registration_ids": deviceTokens,
+                            "notification": {
+                                "title": "Doctor is not available!",
+                                "body": `${doctorsData.Hospital.Name} hospital's Doctor ${doctorsData.FirstName} ${doctorsData.LastName} is not available on: ${BookingDate}. Please choose some other dates for consultation.`,
+                                "sound": "default"
+                            }
+                        }
+
+                        var config = {
+                            headers: { 'Authorization': 'Bearer  ' + fcmServerKey },
+                        };
+
+                        let sendNotification = await axios.post(url, notificationObj, config)
+                        console.log("sendNotification :", sendNotification)
+                    }
                     res.send({
                         status: 200,
                         success: true,
@@ -135,14 +170,14 @@ exports.setDoctorActivity = async (req, res) => {
                         data: data
                     });
                 })
-                .catch(err => {
-                    res.send({
-                        status: 400,
-                        success: false,
-                        message: "Error while adding doctor status",
-                        data: err
-                    });
-                })
+            .catch(err => {
+                res.send({
+                    status: 400,
+                    success: false,
+                    message: "Error while adding doctor status",
+                    data: err
+                });
+            })
         }
     }
     catch (err) {
@@ -190,6 +225,34 @@ exports.updateTokenQueue = async (req, res) => {
         if (tokenQueueData) {
             let tokenUpdate = await TokenQueueSchema.findByIdAndUpdate(tokenQueueData.id, { CurrentToken: CurrentToken });
             if (tokenUpdate) {
+                let url = "https://fcm.googleapis.com/fcm/send";
+                let fcmServerKey = Config.fcm_server_key;
+                let deviceTokens = []
+
+                let appointmentsData = await Appointment.find({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate }).populate('User');;
+                console.log("appointmentsData :", appointmentsData);
+                if (appointmentsData) {
+                    appointmentsData.map(ap => {
+                        deviceTokens.push(ap.User.DeviceToken)
+                    })
+                }
+                // let appointments = appointmentsData.filter(a => a.TokenNumber >= CurrentToken)
+                console.log("deviceTokens :", deviceTokens);
+                let notificationObj = {
+                    "registration_ids": deviceTokens,
+                    "notification": {
+                        "title": "Token update!",
+                        "body": `Your doctor ongoing token is : ${CurrentToken}. Reach your hospital before your token passes!. Please ignore if consultation done already.`,
+                        "sound": "default"
+                    }
+                }
+
+                var config = {
+                    headers: { 'Authorization': 'Bearer  ' + fcmServerKey },
+                };
+
+                let sendNotification = await axios.post(url, notificationObj, config)
+                console.log("sendNotification :", sendNotification)
                 res.send({
                     status: 200,
                     success: true,
