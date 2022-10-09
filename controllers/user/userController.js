@@ -118,12 +118,13 @@ exports.createUser = async (req, res) => {
             MobileNumber: req.body.MobileNumber,
             Email: req.body.Email,
             Password: bcrypt.hashSync(req.body.Password, salt),
-            Role: "user"
+            Role: "user",
+            DeviceToken: req.body.DeviceToken
         })
 
         newUserOBj.save()
             .then(data => {
-                res.send({
+                return res.send({
                     status: 200,
                     success: true,
                     message: "User registered successfully",
@@ -131,7 +132,7 @@ exports.createUser = async (req, res) => {
                 });
             })
             .catch(err => {
-                res.send({
+                return res.send({
                     status: 400,
                     success: false,
                     message: "Error while creating the user!",
@@ -168,7 +169,7 @@ exports.createUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
     User.find()
         .then(data => {
-            res.send({
+            return res.send({
                 status: 200,
                 success: true,
                 message: "Users found successfully",
@@ -176,7 +177,7 @@ exports.getUsers = async (req, res) => {
             });
         })
         .catch(err => {
-            res.send({
+            return res.send({
                 status: 400,
                 success: false,
                 message: "Error while fetching the users!",
@@ -197,7 +198,7 @@ exports.getUserDetails = async (req, res) => {
     try {
         User.findById(UserID)
             .then(data => {
-                res.send({
+                return res.send({
                     status: 200,
                     success: true,
                     message: "Users found successfully",
@@ -205,7 +206,7 @@ exports.getUserDetails = async (req, res) => {
                 });
             })
             .catch(err => {
-                res.send({
+                return res.send({
                     status: 400,
                     success: false,
                     message: "Error while fetching the users!",
@@ -372,7 +373,7 @@ exports.generateOTP = async (req, res) => {
                 let send = await sendOtp(MobileNumber, otp);
                 //    let send = await sendOtp();
                 console.log("send 1:", send);
-                res.send({
+                return res.send({
                     status: 200,
                     success: true,
                     message: "OTP updated successfully",
@@ -380,7 +381,7 @@ exports.generateOTP = async (req, res) => {
                 });
             }
             else {
-                res.send({
+                return res.send({
                     status: 400,
                     success: false,
                     message: "Error while updating the otp!",
@@ -394,7 +395,7 @@ exports.generateOTP = async (req, res) => {
                     let send = await sendOtp(MobileNumber, otp);
                     // let send = await sendOtp();
                     console.log("send 2:", send);
-                    res.send({
+                    return res.send({
                         status: 200,
                         success: true,
                         message: "OTP sent successfully",
@@ -402,7 +403,7 @@ exports.generateOTP = async (req, res) => {
                     });
                 })
                 .catch(err => {
-                    res.send({
+                    return res.send({
                         status: 400,
                         success: false,
                         message: "Error while storing the otp!",
@@ -587,7 +588,7 @@ exports.login = async (req, res) => {
                     FullName: user.FullName,
                     MobileNumber: user.MobileNumber,
                     Role: user.Role,
-                    Email : user.Email
+                    Email: user.Email
                 }
                 let accessToken = await generateJwt(customToken);
                 customToken["token"] = await accessToken;
@@ -995,6 +996,58 @@ exports.forgotPasswordStep2 = async (req, res) => {
                 status: 400,
                 success: false,
                 message: "User not found"
+            });
+        }
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
+exports.updateDeviceToken = async (req, res) => {
+    let { UserId, DeviceToken } = req.body;
+    if (!req.body) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Content can not be empty!"
+        });
+    }
+    if (!UserId) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "user Id can not be empty!"
+        });
+    }
+    if (!DeviceToken) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Device token can not be empty!"
+        });
+    }
+    try {
+        let tokenUpdated = await User.findByIdAndUpdate(UserId, { DeviceToken: DeviceToken }, { new: true });
+        if (tokenUpdated) {
+            return res.send({
+                status: 200,
+                success: true,
+                message: "Device token updated successfully",
+                data: tokenUpdated
+            });
+        }
+        else {
+            return res.send({
+                status: 400,
+                success: false,
+                message: "Error while updating the device token!",
+                data: err
             });
         }
     }

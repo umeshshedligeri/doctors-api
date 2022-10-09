@@ -18,5 +18,6 @@ router.post('/bookAppointment', userController.bookAppointment);
 router.post('/changePassword', userController.changePassword);
 router.post('/forgotPasswordStep1', userController.forgotPasswordStep1);
 router.post('/forgotPasswordStep2', userController.forgotPasswordStep2);
+router.put('/updateDeviceToken', userController.updateDeviceToken);
 
 module.exports = router;

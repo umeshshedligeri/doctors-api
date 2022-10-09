@@ -7,7 +7,8 @@ const userSchema = new Schema({
     Password: { type: String, required: true },
     Role: { type: String, required: true },
     Email: { type: String, required: true },
-    OTP: { type: Number }
+    OTP: { type: Number },
+    DeviceToken: { type: String }
 });
 
 module.exports = mongoose.model("user", userSchema);
