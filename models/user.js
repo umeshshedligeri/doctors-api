@@ -8,7 +8,8 @@ const userSchema = new Schema({
     Role: { type: String, required: true },
     Email: { type: String, required: true },
     OTP: { type: Number },
-    DeviceToken: { type: String }
+    DeviceToken: { type: String },
+    FileLocation: { type: String }
 });
 
 module.exports = mongoose.model("user", userSchema);

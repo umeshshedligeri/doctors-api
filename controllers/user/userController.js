@@ -9,10 +9,10 @@ let HospitalSchema = require("../../models/hospital");
 let Doctor = require("../../models/doctors");
 let DoctorStatusSchema = require("../../models/doctorStatus");
 let bcrypt = require("bcryptjs");
-
 let generateJwt = require("../../utils/jwt");
 let push = require("../../utils/push");
-
+const multer = require("multer");
+const { s3uploadv2 } = require("../../utils/uploadNew");
 
 var ObjectId = require('mongoose').Types.ObjectId;
 
@@ -79,7 +79,7 @@ exports.createUser = async (req, res) => {
         return res.send({
             status: 400,
             success: false,
-            message: "First name can not be empty!"
+            message: "Full name can not be empty!"
         });
     }
     if (!req.body.MobileNumber) {
@@ -201,7 +201,7 @@ exports.getUserDetails = async (req, res) => {
                 return res.send({
                     status: 200,
                     success: true,
-                    message: "Users found successfully",
+                    message: "User details found successfully",
                     data: data
                 });
             })
@@ -209,7 +209,7 @@ exports.getUserDetails = async (req, res) => {
                 return res.send({
                     status: 400,
                     success: false,
-                    message: "Error while fetching the users!",
+                    message: "Error while fetching the user details!",
                     data: err
                 });
             })
@@ -589,7 +589,7 @@ exports.login = async (req, res) => {
                     MobileNumber: user.MobileNumber,
                     Role: user.Role,
                     Email: user.Email,
-                    DeviceToken : user.DeviceToken
+                    DeviceToken: user.DeviceToken
                 }
                 let accessToken = await generateJwt(customToken);
                 customToken["token"] = await accessToken;
@@ -1049,6 +1049,103 @@ exports.updateDeviceToken = async (req, res) => {
                 success: false,
                 message: "Error while updating the device token!",
                 data: err
+            });
+        }
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
+exports.updateUser = async (req, res) => {
+    let { UserId, FullName, Email, Location } = req.body;
+    if (!req.body) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Content can not be empty!"
+        });
+    }
+    if (!UserId) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "user Id can not be empty!"
+        });
+    }
+    if (!FullName) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Full Name can not be empty!"
+        });
+    }
+    if (!Email) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Email can not be empty!"
+        });
+    }
+    try {
+        let userUpdated = await User.findByIdAndUpdate(UserId, { FullName: FullName, Email: Email, FileLocation: Location }, { new: true });
+        if (userUpdated) {
+            return res.send({
+                status: 200,
+                success: true,
+                message: "User updated successfully",
+                data: userUpdated
+            });
+        }
+        else {
+            return res.send({
+                status: 400,
+                success: false,
+                message: "Error while updating the user!",
+                data: err
+            });
+        }
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
+exports.fileUpload = async (req, res) => {
+    try {
+        const file = req.file;
+        if (!req.file) {
+            return res.send({
+                status: 400,
+                success: false,
+                message: "Please select a file to upload",
+                data: null
+            });
+        }
+        else if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+            const result = await s3uploadv2(file);
+            return res.send({
+                status: 200,
+                success: true,
+                message: "File uploaded successfully",
+                data: result
+            });
+        } else {
+            return res.send({
+                status: 400,
+                success: false,
+                message: "Invalid file type, only JPEG and PNG is allowed!",
+                data: null
             });
         }
     }
