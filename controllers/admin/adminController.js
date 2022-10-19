@@ -446,3 +446,76 @@ exports.addReceptionalist = async (req, res) => {
         });
     }
 }
+
+exports.updateReceptionalist = async (req, res) => {
+    // Validate request
+    let { ReceptionalistID, FullName, MobileNumber,Email,Location } = req.body;
+
+    if (!req.body) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Content can not be empty!"
+        });
+    }
+    if (!FullName) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Full name can not be empty!"
+        });
+    }
+    if (!MobileNumber) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Mobile number can not be empty!"
+        });
+    }
+    if (!Email) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Email can not be empty!"
+        });
+    }
+    if (!ReceptionalistID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Receptionalist ID can not be empty!"
+        });
+    }
+    try {
+        let updateReception = await User.findByIdAndUpdate(ReceptionalistID,
+            {
+                FullName: FullName,
+                MobileNumber: MobileNumber,
+                Email: Email,
+                FileLocation: Location
+            })
+        if (updateReception) {
+            return res.send({
+                status: 200,
+                success: true,
+                message: "Receptionalist details updated successfully",
+                data: updateReception
+            });
+        }
+        else {
+            return res.send({
+                status: 400,
+                success: false,
+                message: "Error while updating Receptionalist details"
+            });
+        }
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
