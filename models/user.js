@@ -9,7 +9,8 @@ const userSchema = new Schema({
     Email: { type: String, required: true },
     OTP: { type: Number },
     DeviceToken: { type: String },
-    FileLocation: { type: String }
+    FileLocation: { type: String },
+    Hospital: { type: mongoose.Schema.Types.ObjectId, ref: 'hospital' }
 });
 
 module.exports = mongoose.model("user", userSchema);

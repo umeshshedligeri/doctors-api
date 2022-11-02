@@ -6,7 +6,7 @@ let User = require("../../models/user");
 
 exports.createHospital = async (req, res) => {
 
-    let { Name, Address, City } = req.body;
+    let { Name, Address, City, Location } = req.body;
 
     if (!req.body.Name) {
         return res.send({
@@ -33,7 +33,8 @@ exports.createHospital = async (req, res) => {
         const hospitalObj = new HospitalSchema({
             Name: Name,
             Address: Address,
-            City: City
+            City: City,
+            FileLocation: Location
         });
         hospitalObj.save()
             .then(data => {
@@ -64,7 +65,7 @@ exports.createHospital = async (req, res) => {
 }
 
 exports.addDoctors = async (req, res) => {
-    let { FirstName, LastName, MobileNumber, Hospital, Speciality } = req.body;
+    let { FirstName, LastName, MobileNumber, Hospital, Speciality,Location } = req.body;
     if (!req.body.FirstName) {
         return res.send({
             status: 400,
@@ -107,7 +108,8 @@ exports.addDoctors = async (req, res) => {
             LastName: LastName,
             MobileNumber: MobileNumber,
             Hospital: Hospital,
-            Speciality: Speciality
+            Speciality: Speciality,
+            FileLocation: Location
         });
         doctorObj.save()
             .then(data => {
@@ -176,7 +178,7 @@ exports.getDoctorInfo = async (req, res) => {
 }
 
 exports.updateDoctorInfo = async (req, res) => {
-    let { doctorId, FirstName, LastName, MobileNumber, HospitalID, Speciality,Location } = req.body;
+    let { doctorId, FirstName, LastName, MobileNumber, HospitalID, Speciality, Location } = req.body;
     if (!req.body) {
         return res.send({
             status: 400,
@@ -407,6 +409,13 @@ exports.addReceptionalist = async (req, res) => {
             message: "Password can not be empty!"
         });
     }
+    if (!req.body.HospitalID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Hospital ID can not be empty!"
+        });
+    }
 
     try {
         let salt = bcrypt.genSaltSync(10);
@@ -416,7 +425,8 @@ exports.addReceptionalist = async (req, res) => {
             Email: req.body.Email,
             Password: bcrypt.hashSync(req.body.Password, salt),
             Role: "reception",
-            DeviceToken: req.body.DeviceToken
+            DeviceToken: req.body.DeviceToken,
+            Hospital  : req.body.HospitalID
         })
 
         newUserOBj.save()
@@ -449,7 +459,7 @@ exports.addReceptionalist = async (req, res) => {
 
 exports.updateReceptionalist = async (req, res) => {
     // Validate request
-    let { ReceptionalistID, FullName, MobileNumber,Email,Location } = req.body;
+    let { ReceptionalistID, FullName, MobileNumber, Email, Location } = req.body;
 
     if (!req.body) {
         return res.send({
