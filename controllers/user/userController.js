@@ -589,7 +589,9 @@ exports.login = async (req, res) => {
                     MobileNumber: user.MobileNumber,
                     Role: user.Role,
                     Email: user.Email,
-                    DeviceToken: user.DeviceToken
+                    DeviceToken: user.DeviceToken,
+                    Hospital: user.Hospital,
+                    Doctor: user.Doctor
                 }
                 let accessToken = await generateJwt(customToken);
                 customToken["token"] = await accessToken;
@@ -754,7 +756,13 @@ exports.bookAppointment = async (req, res) => {
 
 exports.getHospitals = async (req, res) => {
     try {
-        let hospitals = await HospitalSchema.find();
+        let hospitals = []
+        if (req.user.Hospital) {
+            hospitals = await HospitalSchema.find({ _id: ObjectId(req.user.Hospital) })
+        }
+        else {
+            hospitals = await HospitalSchema.find()
+        }
         if (hospitals) {
             res.send({
                 status: 200,

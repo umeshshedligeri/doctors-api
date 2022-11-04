@@ -10,7 +10,8 @@ const userSchema = new Schema({
     OTP: { type: Number },
     DeviceToken: { type: String },
     FileLocation: { type: String },
-    Hospital: { type: mongoose.Schema.Types.ObjectId, ref: 'hospital' }
+    Hospital: { type: mongoose.Schema.Types.ObjectId, ref: 'hospital' },
+    Doctor: { type: mongoose.Schema.Types.ObjectId, ref: 'doctor' },
 });
 
 module.exports = mongoose.model("user", userSchema);

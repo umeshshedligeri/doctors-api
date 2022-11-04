@@ -65,7 +65,7 @@ exports.createHospital = async (req, res) => {
 }
 
 exports.addDoctors = async (req, res) => {
-    let { FirstName, LastName, MobileNumber, Hospital, Speciality,Location } = req.body;
+    let { FirstName, LastName, MobileNumber, Hospital, Speciality, Location } = req.body;
     if (!req.body.FirstName) {
         return res.send({
             status: 400,
@@ -416,6 +416,13 @@ exports.addReceptionalist = async (req, res) => {
             message: "Hospital ID can not be empty!"
         });
     }
+    if (!req.body.DoctorID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Doctor ID can not be empty!"
+        });
+    }
 
     try {
         let salt = bcrypt.genSaltSync(10);
@@ -426,7 +433,8 @@ exports.addReceptionalist = async (req, res) => {
             Password: bcrypt.hashSync(req.body.Password, salt),
             Role: "reception",
             DeviceToken: req.body.DeviceToken,
-            Hospital  : req.body.HospitalID
+            Hospital: req.body.HospitalID,
+            Doctor: req.body.DoctorID
         })
 
         newUserOBj.save()
