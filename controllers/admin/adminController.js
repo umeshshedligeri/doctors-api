@@ -2,6 +2,7 @@ let HospitalSchema = require("../../models/hospital");
 let Doctor = require("../../models/doctors");
 let bcrypt = require("bcryptjs");
 let User = require("../../models/user");
+var ObjectId = require('mongoose').Types.ObjectId;
 
 
 exports.createHospital = async (req, res) => {
@@ -525,6 +526,58 @@ exports.updateReceptionalist = async (req, res) => {
                 status: 400,
                 success: false,
                 message: "Error while updating Receptionalist details"
+            });
+        }
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
+exports.getReceptionalists = async (req, res) => {
+
+    let { HospitalID, DoctorID } = req.query;
+    if (!req.query) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Content can not be empty!"
+        });
+    }
+    if (!HospitalID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Hospital ID can not be empty!"
+        });
+    }
+    if (!DoctorID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Doctor ID can not be empty!"
+        });
+    }
+    try {
+        let receptionalists = await User.find({ Hospital: ObjectId(HospitalID), Doctor: ObjectId(DoctorID) });
+        if(receptionalists){
+            return res.send({
+                status: 200,
+                success: true,
+                message: "Receptionalists found successfully",
+                data: receptionalists
+            });
+        }
+        else{
+            return res.send({
+                status: 400,
+                success: false,
+                message: "Error while fetching Receptionalists"
             });
         }
     }

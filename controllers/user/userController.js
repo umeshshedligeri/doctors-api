@@ -757,7 +757,7 @@ exports.bookAppointment = async (req, res) => {
 exports.getHospitals = async (req, res) => {
     try {
         let hospitals = []
-        if (req.user.Hospital) {
+        if (req?.user?.Hospital) {
             hospitals = await HospitalSchema.find({ _id: ObjectId(req.user.Hospital) })
         }
         else {

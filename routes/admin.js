@@ -12,6 +12,7 @@ router.put('/updateHospitalInfo', adminController.updateHospitalInfo);
 router.get('/getHospitalInfo/:HospitalID', adminController.getHospitalInfo);
 router.post('/addReceptionalist', adminController.addReceptionalist);
 router.put('/updateReceptionalist', adminController.updateReceptionalist);
+router.get('/getReceptionalists', adminController.getReceptionalists);
 
 
 module.exports = router;

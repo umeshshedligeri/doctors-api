@@ -17,7 +17,7 @@ router.get('/userExists', userController.checkUserExists);
 router.post('/generateOTP', userController.generateOTP);
 router.put('/verifyOTP', userController.verifyOTP);
 router.post('/login', userController.login);
-router.get('/getHospitals', auth, userController.getHospitals);
+router.get('/getHospitals', userController.getHospitals);
 router.get('/getDoctorsByHospital', userController.getDoctorsByHospital);
 router.post('/bookAppointment', userController.bookAppointment);
 router.post('/changePassword', userController.changePassword);
