@@ -26,6 +26,7 @@ router.post('/forgotPasswordStep2', userController.forgotPasswordStep2);
 router.put('/updateDeviceToken', userController.updateDeviceToken);
 router.put('/updateUser', userController.updateUser);
 router.post('/upload', upload.single("photo"), userController.fileUpload);
+router.get('/getBookingDetails', userController.getBookingDetails);
 
 
 

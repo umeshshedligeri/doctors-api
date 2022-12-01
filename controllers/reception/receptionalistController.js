@@ -233,7 +233,7 @@ exports.updateTokenQueue = async (req, res) => {
                 console.log("appointmentsData :", appointmentsData);
                 if (appointmentsData) {
                     appointmentsData.map(ap => {
-                        deviceTokens.push(ap.User.DeviceToken)
+                        deviceTokens.push(ap?.User?.DeviceToken)
                     })
                 }
                 // let appointments = appointmentsData.filter(a => a.TokenNumber >= CurrentToken)

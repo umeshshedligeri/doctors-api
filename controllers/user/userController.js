@@ -1166,3 +1166,73 @@ exports.fileUpload = async (req, res) => {
         });
     }
 }
+
+exports.getBookingDetails = async (req, res) => {
+    let { UserId, HospitalID, DoctorID, BookingDate } = req.query;
+    if (!req.query) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Content can not be empty!"
+        });
+    }
+    if (!UserId) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "User Id can not be empty!"
+        });
+    }
+    if (!HospitalID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Hospital ID can not be empty!"
+        });
+    }
+    if (!DoctorID) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Doctor ID can not be empty!"
+        });
+    }
+    if (!BookingDate) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Booking Date can not be empty!"
+        });
+    }
+    try {
+        let appointment = await Appointment.findOne({ Hospital: HospitalID, Doctor: DoctorID, User: UserId, BookingDate: BookingDate })
+        .populate('Hospital')
+        .populate('Doctor');
+        // .sort({ 'createdAt': -1 });
+        if (appointment) {
+            return res.send({
+                status: 200,
+                success: true,
+                message: "Appointment details found successfully",
+                data: appointment
+            });
+        }
+        else {
+            return res.send({
+                status: 400,
+                success: false,
+                message: "There is no appointment",
+                data: null
+            });
+        }
+
+    }
+    catch (err) {
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
