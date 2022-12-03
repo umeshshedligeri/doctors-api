@@ -1236,3 +1236,8 @@ exports.getBookingDetails = async (req, res) => {
         });
     }
 }
+
+
+exports.changethis = async(req,res)=>{
+    
+}
