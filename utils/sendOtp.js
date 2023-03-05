@@ -1,7 +1,7 @@
 var AWS = require('aws-sdk');
 AWS.config.update({
-    accessKeyId: 'AKIA2XEJXDWSPAFB5I5U',
-    secretAccessKey: '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',
+    accessKeyId: 'AKIA5SIHM2L2OBM4BVOI',
+    secretAccessKey: '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',
     region: 'ap-south-1'
 });
 
