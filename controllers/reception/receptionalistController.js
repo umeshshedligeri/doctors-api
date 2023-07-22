@@ -118,12 +118,66 @@ exports.setDoctorActivity = async (req, res) => {
     try {
         let doctorStatusData = await DoctorStatusSchema.findOne({ Hospital: HospitalID, Doctor: DoctorID, BookingDate: BookingDate });
         if (doctorStatusData) {
-            res.send({
-                status: 400,
-                success: false,
-                message: "Doctor status already there for selected date and doctor",
-                data: doctorStatusData
-            });
+            // res.send({
+            //     status: 400,
+            //     success: false,
+            //     message: "Doctor status already there for selected date and doctor",
+            //     data: doctorStatusData
+            // });
+
+            let updateDoctorStatus = await DoctorStatusSchema.findByIdAndUpdate(doctorStatusData._id,
+                {
+                    Activity: Activity
+                },
+                { new: true }
+            )
+            if (updateDoctorStatus) {
+                let doctorsData = await Doctor.findOne({ _id: ObjectId(DoctorID), Hospital: HospitalID }).populate("Hospital");
+                console.log("doctorsData :", doctorsData);
+                if (doctorsData) {
+                    let url = "https://fcm.googleapis.com/fcm/send";
+                    let fcmServerKey = Config.fcm_server_key;
+                    let deviceTokens = []
+                    let users = await User.find();
+                    if (users) {
+                        users.map(u => {
+                            deviceTokens.push(u.DeviceToken);
+                        })
+                    }
+                    console.log("deviceTokens :", deviceTokens);
+                    let bodyDisable = `${doctorsData.Hospital.Name} hospital's Doctor ${doctorsData.FirstName} ${doctorsData.LastName} is not available on: ${BookingDate}. Please choose some other dates for consultation.`
+                    let bodyEnable = `${doctorsData.Hospital.Name} hospital's Doctor ${doctorsData.FirstName} ${doctorsData.LastName} is available on: ${BookingDate}. Please take consultation as per your slot.`
+                    let notificationObj = {
+                        "registration_ids": deviceTokens,
+                        "notification": {
+                            "title": Activity === "enable" ? "Doctor is available!" : "Doctor is not available!",
+                            // "body": `${doctorsData.Hospital.Name} hospital's Doctor ${doctorsData.FirstName} ${doctorsData.LastName} is not available on: ${BookingDate}. Please choose some other dates for consultation.`,
+                            "body": Activity === "enable" ? bodyEnable : bodyDisable,
+                            "sound": "default"
+                        }
+                    }
+
+                    var config = {
+                        headers: { 'Authorization': 'Bearer  ' + fcmServerKey },
+                    };
+
+                    let sendNotification = await axios.post(url, notificationObj, config)
+                    console.log("sendNotification :", sendNotification)
+                }
+                res.send({
+                    status: 200,
+                    success: true,
+                    message: "Doctor Activity updated successfully",
+                    data: updateDoctorStatus
+                });
+            }
+            else {
+                res.send({
+                    status: 400,
+                    success: false,
+                    message: "Error while updating doctor status",
+                });
+            }
         }
         else {
             const newObj = new DoctorStatusSchema({
@@ -170,14 +224,14 @@ exports.setDoctorActivity = async (req, res) => {
                         data: data
                     });
                 })
-            .catch(err => {
-                res.send({
-                    status: 400,
-                    success: false,
-                    message: "Error while adding doctor status",
-                    data: err
-                });
-            })
+                .catch(err => {
+                    res.send({
+                        status: 400,
+                        success: false,
+                        message: "Error while adding doctor status",
+                        data: err
+                    });
+                })
         }
     }
     catch (err) {
