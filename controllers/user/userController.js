@@ -12,7 +12,9 @@ let bcrypt = require("bcryptjs");
 let generateJwt = require("../../utils/jwt");
 let push = require("../../utils/push");
 const multer = require("multer");
-const { s3uploadv2 } = require("../../utils/uploadNew");
+const { s3uploadv2, localUpload } = require("../../utils/uploadNew");
+let mailer = require("../../utils/mailer");
+
 
 var ObjectId = require('mongoose').Types.ObjectId;
 
@@ -350,12 +352,20 @@ exports.generateOTP = async (req, res) => {
         });
         return
     }
-    let { MobileNumber } = req.body
+    let { MobileNumber, Email } = req.body
     if (!MobileNumber) {
         res.send({
             status: 400,
             success: false,
             message: "Mobile number can not be empty!"
+        });
+        return
+    }
+    if (!Email) {
+        res.send({
+            status: 400,
+            success: false,
+            message: "Email can not be empty!"
         });
         return
     }
@@ -370,7 +380,11 @@ exports.generateOTP = async (req, res) => {
         if (user) {
             let otpUpdate = await Otp_verification.findByIdAndUpdate(user.id, { OTP: otp }, { new: true });
             if (otpUpdate) {
-                let send = await sendOtp(MobileNumber, otp);
+                //To send otp through mobile
+                // let send = await sendOtp(MobileNumber, otp);
+
+                //Email OTP
+                let send = await mailer(MobileNumber, otp, Email);
                 //    let send = await sendOtp();
                 console.log("send 1:", send);
                 return res.send({
@@ -392,7 +406,11 @@ exports.generateOTP = async (req, res) => {
         else {
             otpObj.save()
                 .then(async (data) => {
-                    let send = await sendOtp(MobileNumber, otp);
+                    //Mobile OTP
+                    // let send = await sendOtp(MobileNumber, otp);
+
+                    //Email OTP
+                    let send = await mailer(MobileNumber, otp,Email);
                     // let send = await sendOtp();
                     console.log("send 2:", send);
                     return res.send({
@@ -1129,7 +1147,9 @@ exports.updateUser = async (req, res) => {
     }
 }
 
-exports.fileUpload = async (req, res) => {
+
+//Used for uploading files to s3
+exports.fileUpload_To_S3 = async (req, res) => {
     try {
         const file = req.file;
         if (!req.file) {
@@ -1166,6 +1186,45 @@ exports.fileUpload = async (req, res) => {
         });
     }
 }
+
+exports.fileUpload = async (req, res) => {
+    try {
+        const file = req.file;
+        if (!req.file) {
+            return res.send({
+                status: 400,
+                success: false,
+                message: "Please select a file to upload",
+                data: null
+            });
+        }
+        else if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+            return res.send({
+                status: 200,
+                success: true,
+                message: "File uploaded successfully",
+                data: req.file
+            });
+        } else {
+            return res.send({
+                status: 400,
+                success: false,
+                message: "Invalid file type, only JPEG and PNG is allowed!",
+                data: null
+            });
+        }
+    }
+    catch (err) {
+        console.log("err :",err);
+        return res.send({
+            status: 400,
+            success: false,
+            message: "Something went wrong",
+            data: err
+        });
+    }
+}
+
 
 exports.getBookingDetails = async (req, res) => {
     let { UserId, HospitalID, DoctorID, BookingDate } = req.query;
@@ -1206,8 +1265,8 @@ exports.getBookingDetails = async (req, res) => {
     }
     try {
         let appointment = await Appointment.findOne({ Hospital: HospitalID, Doctor: DoctorID, User: UserId, BookingDate: BookingDate })
-        .populate('Hospital')
-        .populate('Doctor');
+            .populate('Hospital')
+            .populate('Doctor');
         // .sort({ 'createdAt': -1 });
         if (appointment) {
             return res.send({
@@ -1238,6 +1297,6 @@ exports.getBookingDetails = async (req, res) => {
 }
 
 
-exports.changethis = async(req,res)=>{
-    
+exports.changethis = async (req, res) => {
+
 }

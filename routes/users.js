@@ -3,7 +3,16 @@ var router = express.Router();
 let userController = require("../controllers/user/userController");
 const auth = require("../middlewares/auth");
 var multer = require('multer')
-const storage = multer.memoryStorage();
+// const storage = multer.memoryStorage(); //For S3
+
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads')   
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname)      
+    }
+})
 
 const upload = multer({
     storage
